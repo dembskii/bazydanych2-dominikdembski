@@ -1,5 +1,85 @@
 const {pool} = require('../config/db');
+const Joi = require('joi');
 
+const createProductSchema = Joi.object({
+    name: Joi.string().trim().min(2).max(100).required()
+        .messages({
+            'string.empty': 'Nazwa produktu nie może być pusta',
+            'string.min': 'Nazwa produktu musi mieć co najmniej {#limit} znaki',
+            'string.max': 'Nazwa produktu nie może przekraczać {#limit} znaków',
+            'any.required': 'Nazwa produktu jest wymagana'
+        }),
+    
+    description: Joi.string().allow('', null),
+    
+    price: Joi.number().precision(2).positive().required()
+        .messages({
+            'number.base': 'Cena musi być liczbą',
+            'number.positive': 'Cena musi być większa od zera',
+            'any.required': 'Cena jest wymagana'
+        }),
+    
+    category: Joi.string().allow('', null).max(50)
+        .messages({
+            'string.max': 'Kategoria nie może przekraczać {#limit} znaków'
+        }),
+    
+    stockCount: Joi.number().integer().min(0).default(0)
+        .messages({
+            'number.base': 'Ilość w magazynie musi być liczbą',
+            'number.integer': 'Ilość w magazynie musi być liczbą całkowitą',
+            'number.min': 'Ilość w magazynie nie może być ujemna'
+        }),
+    
+    brand: Joi.string().allow('', null).max(50)
+        .messages({
+            'string.max': 'Marka nie może przekraczać {#limit} znaków'
+        }),
+    
+    imageUrl: Joi.string().allow('', null).max(255).uri().messages({
+        'string.uri': 'URL obrazka musi być poprawnym adresem URL',
+        'string.max': 'URL obrazka nie może przekraczać {#limit} znaków'
+    })
+});
+
+const updateProductSchema = Joi.object({
+    name: Joi.string().trim().min(2).max(100)
+        .messages({
+            'string.empty': 'Nazwa produktu nie może być pusta',
+            'string.min': 'Nazwa produktu musi mieć co najmniej {#limit} znaki',
+            'string.max': 'Nazwa produktu nie może przekraczać {#limit} znaków'
+        }),
+    
+    description: Joi.string().allow('', null),
+    
+    price: Joi.number().precision(2).positive()
+        .messages({
+            'number.base': 'Cena musi być liczbą',
+            'number.positive': 'Cena musi być większa od zera'
+        }),
+    
+    category: Joi.string().allow('', null).max(50)
+        .messages({
+            'string.max': 'Kategoria nie może przekraczać {#limit} znaków'
+        }),
+    
+    stockCount: Joi.number().integer().min(0)
+        .messages({
+            'number.base': 'Ilość w magazynie musi być liczbą',
+            'number.integer': 'Ilość w magazynie musi być liczbą całkowitą',
+            'number.min': 'Ilość w magazynie nie może być ujemna'
+        }),
+    
+    brand: Joi.string().allow('', null).max(50)
+        .messages({
+            'string.max': 'Marka nie może przekraczać {#limit} znaków'
+        }),
+    
+    imageUrl: Joi.string().allow('', null).max(255).uri().messages({
+        'string.uri': 'URL obrazka musi być poprawnym adresem URL',
+        'string.max': 'URL obrazka nie może przekraczać {#limit} znaków'
+    })
+});
 
 const getAllProducts = async (options = {}) => {
     try {
@@ -15,18 +95,14 @@ const getAllProducts = async (options = {}) => {
         
         const queryParams = [];
         
-        
+
         if (options.available !== undefined) {
             query += ` AND stock_count ${options.available ? '> 0' : '= 0'}`;
         }
         
+
         
-        if (options.category) {
-            queryParams.push(options.category);
-            query += ` AND category = $${queryParams.length}`;
-        }
-        
-        
+
         if (options.sort === 'price') {
             query += ` ORDER BY price ASC`;
         } else if (options.sort === '-price') {
@@ -69,7 +145,16 @@ const getProductById = async (id) => {
 
 const createProduct = async (productData) => {
     try {
-        const { name, category, description, price, stockCount, brand, imageUrl } = productData;
+
+        const { error, value } = createProductSchema.validate(productData, { abortEarly: false });
+        
+        if (error) {
+            const messages = error.details.map(detail => detail.message).join(', ');
+            throw new Error(`Błąd walidacji: ${messages}`);
+        }
+        
+
+        const { name, category, description, price, stockCount, brand, imageUrl } = value;
         
         const query = `
             INSERT INTO products (
@@ -88,7 +173,7 @@ const createProduct = async (productData) => {
             category || null, 
             description || null, 
             price, 
-            stockCount || 0, 
+            stockCount, 
             brand || null, 
             imageUrl || null
         ];
@@ -103,58 +188,65 @@ const createProduct = async (productData) => {
 
 const updateProduct = async (id, productData) => {
     try {
+
+        const { error, value } = updateProductSchema.validate(productData, { abortEarly: false });
         
+        if (error) {
+            const messages = error.details.map(detail => detail.message).join(', ');
+            throw new Error(`Błąd walidacji: ${messages}`);
+        }
+        
+
         const existingProduct = await getProductById(id);
         if (!existingProduct) {
             return null;
         }
         
-        
+
         const fields = [];
         const values = [];
         let paramCount = 1;
         
-        if (productData.name !== undefined) {
+        if (value.name !== undefined) {
             fields.push(`name = $${paramCount++}`);
-            values.push(productData.name);
+            values.push(value.name);
         }
         
-        if (productData.category !== undefined) {
+        if (value.category !== undefined) {
             fields.push(`category = $${paramCount++}`);
-            values.push(productData.category);
+            values.push(value.category);
         }
         
-        if (productData.description !== undefined) {
+        if (value.description !== undefined) {
             fields.push(`description = $${paramCount++}`);
-            values.push(productData.description);
+            values.push(value.description);
         }
         
-        if (productData.price !== undefined) {
+        if (value.price !== undefined) {
             fields.push(`price = $${paramCount++}`);
-            values.push(productData.price);
+            values.push(value.price);
         }
         
-        if (productData.stockCount !== undefined) {
+        if (value.stockCount !== undefined) {
             fields.push(`stock_count = $${paramCount++}`);
-            values.push(productData.stockCount);
+            values.push(value.stockCount);
         }
         
-        if (productData.brand !== undefined) {
+        if (value.brand !== undefined) {
             fields.push(`brand = $${paramCount++}`);
-            values.push(productData.brand);
+            values.push(value.brand);
         }
         
-        if (productData.imageUrl !== undefined) {
+        if (value.imageUrl !== undefined) {
             fields.push(`image_url = $${paramCount++}`);
-            values.push(productData.imageUrl);
+            values.push(value.imageUrl);
         }
         
-       
+
         if (fields.length === 0) {
             return existingProduct;
         }
         
-    
         values.push(id);
         
         const query = `

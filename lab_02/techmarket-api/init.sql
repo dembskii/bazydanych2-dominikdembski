@@ -1,11 +1,3 @@
--- Tworzenie tabeli 'users'
-CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    password VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL UNIQUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
 
 -- Tworzenie tabeli 'products'
 CREATE TABLE IF NOT EXISTS products (
@@ -19,15 +11,6 @@ CREATE TABLE IF NOT EXISTS products (
     image_url TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
--- Wstawianie przykładowych danych do tabeli 'users' (jeśli tabela jest pusta)
-INSERT INTO users (username, password, email)
-SELECT 'user1', 'password1', 'user1@example.com'
-WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'user1');
-
-INSERT INTO users (username, password, email)
-SELECT 'user2', 'password2', 'user2@example.com'
-WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'user2');
 
 -- Wstawianie przykładowych danych do tabeli 'products' (jeśli tabela jest pusta)
 INSERT INTO products (name, description, price, category, stock_count, brand, image_url)

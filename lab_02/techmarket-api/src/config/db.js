@@ -27,7 +27,7 @@ const initDb = async () => {
     }
 };
 
-// Test connection and initialize DB
+
 pool.connect((err, client, done) => {
     if (err) {
         console.error('Błąd połączenia z bazą danych:', err);

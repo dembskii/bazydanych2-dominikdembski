@@ -3,7 +3,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
 const {notFound, errorHandler} = require('./src/middlewares/errorMiddleware');
-const { pool } = require('./src/config/db');
+
 
 const productRoutes = require('./src/routes/productRoutes');
 
