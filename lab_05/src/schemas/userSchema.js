@@ -38,22 +38,8 @@ const userSchema = Joi.object({
   createdAt: Joi.date().default(Date.now)
 }).required();
 
-// Login schema
-const loginSchema = Joi.object({
-  email: Joi.string().email({ minDomainSegments: 2 }).required()
-    .messages({
-      'string.email': 'Please enter a valid email address',
-      'any.required': 'Email is required'
-    }),
-  password: Joi.string().required().min(6).max(100)
-    .messages({
-      'string.min': 'Password must be at least {#limit} characters',
-      'string.max': 'Password cannot exceed {#limit} characters',
-      'any.required': 'Password is required'
-    })
-}).required();
+
 
 module.exports = {
-  userSchema,
-  loginSchema
+  userSchema
 };

@@ -7,13 +7,9 @@ const {
   createUser,
   updateUser,
   deleteUser,
-  loginUser
 } = require('../controllers/userController');
 
 const router = express.Router();
-
-// POST user login - specific routes should come BEFORE dynamic parameter routes
-router.post('/login', validateRequest(loginSchema, 'body'), loginUser);
 
 // GET all users with pagination
 router.get('/', getAllUsers);

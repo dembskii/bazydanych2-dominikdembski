@@ -215,36 +215,7 @@ const deleteUser = async (req, res) => {
   }
 };
 
-// User login
-const loginUser = async (req, res) => {
-  try {
-    const db = getDb();
-    const { email, password } = req.body;
-    
-    // Find user by email
-    const user = await db.collection('users').findOne({ email });
-    
-    // Check if user exists
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid email or password' });
-    }
-    
-    // Check password (in a real app, you would compare hashed passwords)
-    if (user.password !== password) {
-      return res.status(401).json({ message: 'Invalid email or password' });
-    }
-    
-    // User authenticated - in a real app, you would generate a JWT token here
-    const { password: userPassword, ...userWithoutPassword } = user;
-    
-    res.json({
-      message: 'Login successful',
-      user: userWithoutPassword
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Error during login', error: error.message });
-  }
-};
+
 
 module.exports = {
   getAllUsers,
@@ -252,5 +223,4 @@ module.exports = {
   createUser,
   updateUser,
   deleteUser,
-  loginUser
 };
